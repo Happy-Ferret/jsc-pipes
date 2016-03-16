@@ -9,10 +9,14 @@ function nsInitPage(aPostNonSkelInit_CB) {
 	aPostNonSkelInit_CB();
 }
 
-function openPipe() {	
+function openPipe(aBoolPreExisting) {	
+	// if aBoolPreExisting is set to true
+		// then it is assumed pipe exists, so it is only opened. if pipe fails to open that means it doesnt exist
+	// if its false
+		// pipe is created and opened. if the pipe already exists then it errors.
 	var cPath = document.getElementById('pipe_path').value;
 	
-	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['openPipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['openPipe', cPath, aBoolPreExisting]], bootstrapMsgListener.funcScope, function(aStatusObj) {
 		if (!aStatusObj.status) {
 			alert('failed\n\n' + aStatusObj.msg);
 		} else {
@@ -21,10 +25,10 @@ function openPipe() {
 	});
 }
 
-function closePipe() {
+function closePipe(aBoolDelete) {
 	var cPath = document.getElementById('pipe_path').value;
 	
-	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['closePipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['closePipe', cPath, aBoolDelete]], bootstrapMsgListener.funcScope, function(aStatusObj) {
 		if (!aStatusObj.status) {
 			alert('failed\n\n' + aStatusObj.msg);
 		} else {
@@ -60,6 +64,17 @@ function writePipe() {
 	});
 }
 
+function deleteFile() {
+	var cPath = document.getElementById('pipe_path').value;
+	
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['deletePipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+		if (!aStatusObj.status) {
+			alert('failed\n\n' + aStatusObj.msg);
+		} else {
+			alert('ok\n\n' + aStatusObj.msg);
+		}
+	});
+}
 ////////// end - app_main
 
 

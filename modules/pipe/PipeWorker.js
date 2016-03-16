@@ -217,8 +217,12 @@ function prepTerm() {
 
 var gPipe = {};
 
-function openPipe(aPath) {
-	
+function openPipe(aPath, aBoolPreExisting) {
+	// aBoolPreExisting
+		// true
+			// means the pipe at aPath should be assumed it exists, and it should open. if it fails to open due to not existing then report that error
+		// false
+			// pipe is created and opened only if it doesnt exist. if it exists then it fails to create and open.
 	switch (core.os.mname) {
 		case 'winnt':
 		case 'winmo':
@@ -232,16 +236,30 @@ function openPipe(aPath) {
 				}
 				
 				var pipeMode = ctypes_math.UInt64.or(ostypes.CONST.GENERIC_READ, ostypes.CONST.GENERIC_WRITE);
-				var hFile = ostypes.API('CreateFile')(aPath, pipeMode, ostypes.CONST.FILE_SHARE_READ | ostypes.CONST.FILE_SHARE_WRITE, null, ostypes.CONST.OPEN_EXISTING, ostypes.CONST.FILE_ATTRIBUTE_NORMAL, null);
+				var dwCreationDisposition = aBoolPreExisting ? OS.Constants.Win.OPEN_EXISTING : OS.Constants.Win.CREATE_NEW;
+				console.log('dwCreationDisposition:', dwCreationDisposition);
+				
+				var hFile = ostypes.API('CreateFile')(aPath, pipeMode, ostypes.CONST.FILE_SHARE_READ | ostypes.CONST.FILE_SHARE_WRITE, null, dwCreationDisposition, ostypes.CONST.FILE_ATTRIBUTE_NORMAL, null);
+				var hFileInt = ctypes.cast(hFile, ctypes.int).value.toString();
+				
 				console.log('hFile:', hFile);
 				console.log('hFile deep:', cutils.jscGetDeepest(hFile));
 				console.log('hFile deep 10:', cutils.jscGetDeepest(hFile, 10));
 				console.log('hFile deep 16:', cutils.jscGetDeepest(hFile, 16));
+				console.log('hFileInt:', hFileInt);
 				
-				if (cutils.jscGetDeepest(hFile, 10) == '-1') {
+				if (cutils.jscEqual(hFileInt, -1)) {
+					var msg;
+					if (aBoolPreExisting && ctypes.winLastError == OS.Constants.Win.ERROR_FILE_NOT_FOUND) {
+						// aBoolPreExisting means the user expected it to exist, but it doesnt
+						msg = 'Pipe does not exist! So it could not be opened! You should click on "Create & Open".';
+					} else if (!aBoolPreExisting && ctypes.winLastError == OS.Constants.Win.ERROR_ALREADY_EXISTS) {
+						// !aBoolPreExisting, means user expected it to NOT exist, so they wanted to create it but it already exists, so creation (as well as open) failed
+						msg = 'Pipe already exists! So it could not be created! You shoudl click on "Open Existing".';
+					}
 					return {
 						status: false,
-						msg: 'Failed to open pipe, got error: ' + ctypes.winLastError
+						msg: msg ? msg : 'Failed to open pipe, got error: ' + ctypes.winLastError
 					};
 				}
 				
@@ -269,7 +287,8 @@ function openPipe(aPath) {
 
 }
 
-function closePipe(aPath) {
+function closePipe(aPath, aBoolDelete) {
+	// aBoolDelete if true - then it is attempted to delete pipe. if you didnt create the pipe, or dont have delete access it will return the error
 	
 	switch (core.os.mname) {
 		case 'winnt':
