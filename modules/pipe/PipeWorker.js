@@ -190,7 +190,6 @@ function init(objCore) { // function name init required for SIPWorker
 // start - addon functionality
 function prepTerm() {
 	
-	// unregister the hotkey
 	switch (core.os.mname) {
 		case 'winnt':
 		case 'winmo':
@@ -214,6 +213,36 @@ function prepTerm() {
 	}
 	
 	console.error('ok HotkeyWorker prepped for term');
+}
+
+function openPipe(aPath) {
+	
+	switch (core.os.mname) {
+		case 'winnt':
+		case 'winmo':
+		case 'wince':
+		
+				//
+				console.log('open pipe at path:', aPath)
+				return {
+					status: true
+				};
+			
+			break
+		case 'gtk':
+		
+				// 
+				
+			break;
+		case 'darwin':
+		
+				// 
+				
+			break;
+		default:
+			throw new Error('Operating system, "' + OS.Constants.Sys.Name + '" is not supported');
+	}
+
 }
 
 

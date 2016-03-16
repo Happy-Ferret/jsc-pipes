@@ -8,7 +8,7 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 // Globals
-var core = { // core has stuff added into by MainWorker (currently MainWorker) and then it is updated
+var core = {
 	addon: {
 		name: 'jsc-pipes',
 		id: 'jsc-pipes@jetpack',
@@ -59,7 +59,7 @@ var fsFuncs = { // can use whatever, but by default its setup to use this
 		
 		var mainDeferred_callInPromiseWorker = new Deferred();
 		
-		var rez_pwcall = MainWorker.post(aArrOfFuncnameThenArgs.shift(), aArrOfFuncnameThenArgs);
+		var rez_pwcall = PipeWorker.post(aArrOfFuncnameThenArgs.shift(), aArrOfFuncnameThenArgs);
 		rez_pwcall.then(
 			function(aVal) {
 				console.log('Fullfilled - rez_pwcall - ', aVal);
@@ -187,6 +187,20 @@ var fsMsgListener = {
 		
 	}
 };
+// rev3 - https://gist.github.com/Noitidart/03c84a4fc1e566bd0fe5
+const SAM_CB_PREFIX = '_sam_gen_cb_';
+var sam_last_cb_id = -1;
+function sendAsyncMessageWithCallback(aMessageManager, aGroupId, aMessageArr, aCallbackScope, aCallback) {
+	sam_last_cb_id++;
+	var thisCallbackId = SAM_CB_PREFIX + sam_last_cb_id;
+	aCallbackScope = aCallbackScope ? aCallbackScope : bootstrap;
+	aCallbackScope[thisCallbackId] = function(aMessageArr) {
+		delete aCallbackScope[thisCallbackId];
+		aCallback.apply(null, aMessageArr);
+	}
+	aMessageArr.push(thisCallbackId);
+	aMessageManager.sendAsyncMessage(aGroupId, aMessageArr);
+}
 // end - server/framescript comm layer
 
 function install() {}
@@ -199,7 +213,7 @@ function startup(aData, aReason) {
 	// set stuff in core, as it is sent to worker
 	core.addon.version = aData.version;
 	
-	var promise_initPipeWorker = SIPWorker('PipesWorker', core.addon.path.modules + 'pipe/PipeWorker.js', core, PipesWorkerMainThreadFuncs).post();
+	var promise_initPipeWorker = SIPWorker('PipeWorker', core.addon.path.modules + 'pipe/PipeWorker.js', core, PipesWorkerMainThreadFuncs).post();
 	promise_initPipeWorker.then(
 		function(aVal) {
 			console.log('Fullfilled - promise_initPipeWorker - ', aVal);

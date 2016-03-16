@@ -8,6 +8,33 @@ function nsInitPage(aPostNonSkelInit_CB) {
 	// when done must call aPostNonSkelInit_CB();
 	aPostNonSkelInit_CB();
 }
+
+function openPipe() {
+	alert('opening');
+	
+	var cPath = document.getElementById('pipe_path');
+	
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['openPipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+		if (!aStatusObj.status) {
+			alert('failed');
+		} else {
+			alert('ok');
+		}
+	});
+}
+
+function readPipe() {
+	
+}
+
+function writePipe() {
+	
+}
+
+function destroyPipe() {
+	
+}
+
 ////////// end - app_main
 
 

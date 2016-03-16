@@ -6,8 +6,7 @@
 		<meta name="description" content="jsc-pipes" />
 		<link rel="shortcut icon" href="chrome://jsc-pipes/content/resources/images/icon16.png" type="image/png" />
 
-		<link rel="stylesheet" type="text/css" media="screen" href="chrome://profilist/content/resources/styles/cp.css" />
-		<link rel="stylesheet" type="text/css" media="screen" href="chrome://profilist/content/resources/styles/iconsetpicker.css" />
+		<link rel="stylesheet" type="text/css" media="screen" href="chrome://jsc-pipes/content/resources/styles/cp.css" />
 		
 		<script src="chrome://jsc-pipes/content/resources/scripts/gui.js"></script>
 		
@@ -17,10 +16,16 @@
 	</head>
 	<body>
 		<div id="wrapMain">
-			Name of pipe: <input type="text" id="pipe_name" />
-			<input type="button" value="Create" />
-			<input type="button" value="Read" />
-			<input type="button" value="Destroy" />
+			Path of pipe: <input type="text" id="pipe_path" />
+			<br />
+			Read contents: <input type="text" id="pipe_contents" />
+			<br />
+			Write contents: <input type="text" id="to_write" />
+			<br />
+			<input type="button" value="Open" onclick="openPipe()" />
+			<input type="button" value="Read" onClick="readPipe()"  />
+			<input type="button" value="Write" onClick="writePipe()"  />
+			<input type="button" value="Destroy" onClick="destroyPipe()" />
 		</div>
 	</body>
 </html>
