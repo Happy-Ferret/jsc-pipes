@@ -9,30 +9,55 @@ function nsInitPage(aPostNonSkelInit_CB) {
 	aPostNonSkelInit_CB();
 }
 
-function openPipe() {
-	alert('opening');
-	
-	var cPath = document.getElementById('pipe_path');
+function openPipe() {	
+	var cPath = document.getElementById('pipe_path').value;
 	
 	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['openPipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
 		if (!aStatusObj.status) {
-			alert('failed');
+			alert('failed\n\n' + aStatusObj.msg);
 		} else {
-			alert('ok');
+			alert('ok\n\n' + aStatusObj.msg);
+		}
+	});
+}
+
+function closePipe() {
+	var cPath = document.getElementById('pipe_path').value;
+	
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['closePipe', cPath]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+		if (!aStatusObj.status) {
+			alert('failed\n\n' + aStatusObj.msg);
+		} else {
+			alert('ok\n\n' + aStatusObj.msg);
 		}
 	});
 }
 
 function readPipe() {
+	var cPath = document.getElementById('pipe_path').value;
+	var cBoolIsUnicode = false; // is contents unicode
 	
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['readPipe', cPath, cBoolIsUnicode]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+		if (!aStatusObj.status) {
+			alert('failed\n\n' + aStatusObj.msg);
+		} else {
+			alert('ok\n\n' + aStatusObj.msg);
+		}
+	});
 }
 
 function writePipe() {
+	var cPath = document.getElementById('pipe_path').value;
+	var cContentsToWrite = document.getElementById('contents_to_write').value;
+	var cBoolIsUnicode = false; // is contents unicode
 	
-}
-
-function destroyPipe() {
-	
+	sendAsyncMessageWithCallback(contentMMFromContentWindow_Method2(window), core.addon.id, ['callInPromiseWorker', ['writePipe', cPath, cContentsToWrite, cBoolIsUnicode]], bootstrapMsgListener.funcScope, function(aStatusObj) {
+		if (!aStatusObj.status) {
+			alert('failed\n\n' + aStatusObj.msg);
+		} else {
+			alert('ok\n\n' + aStatusObj.msg);
+		}
+	});
 }
 
 ////////// end - app_main

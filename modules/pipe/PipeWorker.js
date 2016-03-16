@@ -215,6 +215,8 @@ function prepTerm() {
 	console.error('ok HotkeyWorker prepped for term');
 }
 
+var gPipe = {};
+
 function openPipe(aPath) {
 	
 	switch (core.os.mname) {
@@ -222,10 +224,32 @@ function openPipe(aPath) {
 		case 'winmo':
 		case 'wince':
 		
-				//
-				console.log('open pipe at path:', aPath)
+				if(gPipe[aPath]) {
+					return {
+						status: false,
+						msg: 'Pipe already open!'
+					};
+				}
+				
+				var pipeMode = ctypes_math.UInt64.or(ostypes.CONST.GENERIC_READ, ostypes.CONST.GENERIC_WRITE);
+				var hFile = ostypes.API('CreateFile')(aPath, pipeMode, ostypes.CONST.FILE_SHARE_READ | ostypes.CONST.FILE_SHARE_WRITE, null, ostypes.CONST.OPEN_EXISTING, ostypes.CONST.FILE_ATTRIBUTE_NORMAL, null);
+				console.log('hFile:', hFile);
+				console.log('hFile deep:', cutils.jscGetDeepest(hFile));
+				console.log('hFile deep 10:', cutils.jscGetDeepest(hFile, 10));
+				console.log('hFile deep 16:', cutils.jscGetDeepest(hFile, 16));
+				
+				if (cutils.jscGetDeepest(hFile, 10) == '-1') {
+					return {
+						status: false,
+						msg: 'Failed to open pipe, got error: ' + ctypes.winLastError
+					};
+				}
+				
+				gPipe[aPath] = hFile;
+				
 				return {
-					status: true
+					status: true,
+					msg: 'Pipe opened'
 				};
 			
 			break
@@ -245,7 +269,182 @@ function openPipe(aPath) {
 
 }
 
+function closePipe(aPath) {
+	
+	switch (core.os.mname) {
+		case 'winnt':
+		case 'winmo':
+		case 'wince':
+		
+				var hFile = gPipe[aPath];
+				if (!hFile) {
+					return {
+						status: false,
+						msg: 'Pipe at this path was never opened'
+					};
+				}
+				
+				var rez_close = ostypes.API('CloseHandle')(hFile);
+				console.log('rez_close:', rez_close);
+				if (!rez_close) {
+					return {
+						status: false,
+						msg: 'Failed to close pipe got error: ' + ctypes.winLastError
+					};
+				} else {
+					delete gPipe[aPath];
+					return {
+						status: true,
+						msg: 'Closed pipe'
+					};
+				}
+			
+			break
+		case 'gtk':
+		
+				return {
+					status: false,
+					msg: 'Unix/Linux platforms not yet supported'
+				};
+				
+			break;
+		case 'darwin':
+		
+				return {
+					status: false,
+					msg: 'Mac platforms not yet supported'
+				};
+				
+			break;
+		default:
+			throw new Error('Operating system, "' + OS.Constants.Sys.Name + '" is not supported');
+	}
 
+}
+
+function writePipe(aPath, aContentsToWrite, aBoolUnicodeContents) {
+	
+	switch (core.os.mname) {
+		case 'winnt':
+		case 'winmo':
+		case 'wince':
+		
+				var hFile = gPipe[aPath];
+				if (!hFile) {
+					return {
+						status: false,
+						msg: 'Pipe at this path was never opened'
+					};
+				}
+				
+				var buffToWrite;
+				if (aBoolUnicodeContents) {
+					buffToWrite = ostypes.TYPE.WCHAR.array()(aContentsToWrite);
+				} else {
+					buffToWrite = ostypes.TYPE.CHAR.array()(aContentsToWrite);
+				}
+				
+				var bytesWritten = ostypes.TYPE.DWORD();
+				var rez_write = ostypes.API('WriteFile')(hFile, buffToWrite, buffToWrite.constructor.size, bytesWritten.address(), null);
+				console.log('rez_write:', rez_write);
+				console.log('bytesWritten:', cutils.jscGetDeepest(bytesWritten, 10));
+				
+				if (!rez_write) {
+					return {
+						status: false,
+						msg: 'Failed to write to pipe got error: ' + ctypes.winLastError
+					};
+				} else {
+					return {
+						status: true,
+						msg: 'Succesfully wrote ' + cutils.jscGetDeepest(bytesWritten, 10) + ' to pipe'
+					};
+				}
+			
+			break;
+		case 'gtk':
+		
+				return {
+					status: false,
+					msg: 'Unix/Linux platforms not yet supported'
+				};
+				
+			break;
+		case 'darwin':
+		
+				return {
+					status: false,
+					msg: 'Mac platforms not yet supported'
+				};
+				
+			break;
+		default:
+			throw new Error('Operating system, "' + OS.Constants.Sys.Name + '" is not supported');
+	}
+}
+
+function readPipe(aPath, aBoolUnicodeContents) {
+	switch (core.os.mname) {
+		case 'winnt':
+		case 'winmo':
+		case 'wince':
+		
+				var hFile = gPipe[aPath];
+				if (!hFile) {
+					return {
+						status: false,
+						msg: 'Pipe at this path was never opened'
+					};
+				}
+				
+				var bufSize = 1024;
+				var bufRead;
+				if (aBoolUnicodeContents) {
+					bufSize *= 2; // because i allow for at least 1024 characters to be read, thats what i meant by setting bufSize to 1024
+					bufRead = ostypes.TYPE.WCHAR.array(bufSize)();
+				} else {
+					bufRead = ostypes.TYPE.CHAR.array(bufSize)();
+				}
+				
+				var bytesRead = ostypes.TYPE.DWORD();
+				var rez_read = ostypes.API('ReadFile')(hFile, bufRead, bufSize, bytesRead.address(), null);
+				console.log('rez_read:', rez_read);
+				console.log('bytesRead:', cutils.jscGetDeepest(bytesRead, 10));
+				console.log('bufRead:', bufRead.readString());
+				
+				if (!rez_read) {
+					return {
+						status: false,
+						msg: 'Failed to read from pipe, got error: ' + ctypes.winLastError
+					};
+				} else {
+					return {
+						status: true,
+						msg: 'Contents: "' + bufRead.readString() + '"'
+					};
+				}
+			
+			break
+		case 'gtk':
+		
+				return {
+					status: false,
+					msg: 'Unix/Linux platforms not yet supported'
+				};
+				
+			break;
+		case 'darwin':
+		
+				return {
+					status: false,
+					msg: 'Mac platforms not yet supported'
+				};
+				
+			break;
+		default:
+			throw new Error('Operating system, "' + OS.Constants.Sys.Name + '" is not supported');
+	}
+}
 // end - addon functionality
 
 // start - common helpers

@@ -16,16 +16,16 @@
 	</head>
 	<body>
 		<div id="wrapMain">
-			Path of pipe: <input type="text" id="pipe_path" />
+			Path of pipe: <input type="text" id="pipe_path" value="\\\\.\\pipe\\xxx.pipe" />
 			<br />
 			Read contents: <input type="text" id="pipe_contents" />
 			<br />
-			Write contents: <input type="text" id="to_write" />
+			Write contents: <input type="text" id="contents_to_write" />
 			<br />
 			<input type="button" value="Open" onclick="openPipe()" />
-			<input type="button" value="Read" onClick="readPipe()"  />
-			<input type="button" value="Write" onClick="writePipe()"  />
-			<input type="button" value="Destroy" onClick="destroyPipe()" />
+			<input type="button" value="Read" onclick="readPipe()"  />
+			<input type="button" value="Write" onclick="writePipe()"  />
+			<input type="button" value="Close" onclick="closePipe()" />
 		</div>
 	</body>
 </html>
